@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Alert,
   Image,
@@ -13,19 +13,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import CustomButton from '../../components/CustomButton';
 import CustomTextInput from '../../components/CustomTextInput';
-import { IMG, ROUTES } from '../../utils';
+import { IMG, ROUTES, COLORS, layout } from '../../utils';
 import { authLogin } from '../../app/actions';
-
-const COLORS = {
-  background: '#F5F3EF',
-  surface: '#FFFFFF',
-  primary: '#1E3A5F',
-  primaryLight: '#2E4A6F',
-  accent: '#2D6A4F',
-  text: '#1A1A1A',
-  textMuted: '#5C5C5C',
-  border: '#E5E2DC',
-};
+import { useAuthErrorAlert } from '../../hooks/useAuthErrorAlert';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -34,12 +24,7 @@ const Login = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const auth = useSelector(state => state.auth);
-
-  useEffect(() => {
-    if (!auth.isLoading && auth.isError && auth.error) {
-      Alert.alert('Login failed', auth.error);
-    }
-  }, [auth.isLoading, auth.isError, auth.error]);
+  useAuthErrorAlert(auth);
 
   const handleLogin = () => {
     if (!username.trim() || !password) {
@@ -113,7 +98,7 @@ const styles = StyleSheet.create({
   },
   inner: {
     flex: 1,
-    paddingHorizontal: 24,
+    paddingHorizontal: layout.screenPaddingX,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -127,7 +112,7 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     backgroundColor: COLORS.surface,
-    borderRadius: 16,
+    borderRadius: layout.cardRadius,
     padding: 24,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -150,7 +135,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   input: {
-    borderRadius: 10,
+    borderRadius: layout.inputRadius,
     color: COLORS.text,
     paddingVertical: 10,
     paddingHorizontal: 12,
@@ -160,7 +145,7 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     backgroundColor: COLORS.primary,
-    borderRadius: 12,
+    borderRadius: layout.buttonRadius,
     marginTop: 8,
     overflow: 'hidden',
   },

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -11,21 +11,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { useDispatch, useSelector } from 'react-redux';
 
 import CustomButton from '../../components/CustomButton';
 import CustomTextInput from '../../components/CustomTextInput';
-import { ROUTES } from '../../utils';
-
-const COLORS = {
-  background: '#F5F3EF',
-  surface: '#FFFFFF',
-  primary: '#1E3A5F',
-  accent: '#2D6A4F',
-  text: '#1A1A1A',
-  textMuted: '#5C5C5C',
-  border: '#E5E2DC',
-  checkbox: '#2D6A4F',
-};
+import { ROUTES, COLORS, layout } from '../../utils';
+import { registerUser, registerReset } from '../../app/actions';
 
 const Register = () => {
   const [firstName, setFirstName] = useState('');
@@ -35,6 +26,25 @@ const Register = () => {
   const [accepted, setAccepted] = useState(false);
 
   const navigation = useNavigation();
+  const dispatch = useDispatch();
+  const registration = useSelector(s => s.registration);
+
+  useEffect(() => {
+    dispatch(registerReset());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (!registration.isLoading && registration.error) {
+      Alert.alert('Registration failed', String(registration.error));
+    }
+  }, [registration.isLoading, registration.error]);
+
+  useEffect(() => {
+    if (!registration.isLoading && registration.lastResponse) {
+      Alert.alert('Success', 'You can sign in now.');
+      navigation.navigate(ROUTES.LOGIN);
+    }
+  }, [registration.isLoading, registration.lastResponse, navigation]);
 
   const onRegister = () => {
     if (!firstName.trim() || !lastName.trim()) {
@@ -45,7 +55,10 @@ const Register = () => {
       return;
     }
     if (!birthdate.trim()) {
-      Alert.alert('Missing fields', 'Please enter your birthdate (YYYY-MM-DD).');
+      Alert.alert(
+        'Missing fields',
+        'Please enter your birthdate (YYYY-MM-DD).',
+      );
       return;
     }
     if (!accepted) {
@@ -55,8 +68,14 @@ const Register = () => {
       );
       return;
     }
-    Alert.alert('Success', 'Registration complete.');
-    navigation.navigate(ROUTES.LOGIN);
+    dispatch(
+      registerUser({
+        first_name: firstName.trim(),
+        middle_name: middleName.trim(),
+        last_name: lastName.trim(),
+        birthdate: birthdate.trim(),
+      }),
+    );
   };
 
   return (
@@ -116,7 +135,7 @@ const Register = () => {
               onPress={() => setAccepted(!accepted)}
             >
               <View style={[styles.checkbox, accepted && styles.checkboxChecked]}>
-                {accepted && <Text style={styles.checkMark}>✓</Text>}
+                {accepted ? <Text style={styles.checkMark}>✓</Text> : null}
               </View>
               <Text style={styles.checkLabel}>
                 I accept the Terms and Conditions
@@ -124,10 +143,11 @@ const Register = () => {
             </TouchableOpacity>
 
             <CustomButton
-              label="Create account"
+              label={registration.isLoading ? 'Submitting…' : 'Create account'}
               containerStyle={styles.primaryButton}
               textStyle={styles.primaryButtonText}
               onPress={onRegister}
+              disabled={registration.isLoading}
             />
           </View>
 
@@ -156,14 +176,14 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 24,
+    paddingHorizontal: layout.screenPaddingX,
     paddingVertical: 24,
     paddingBottom: 40,
   },
   card: {
     width: '100%',
     backgroundColor: COLORS.surface,
-    borderRadius: 16,
+    borderRadius: layout.cardRadius,
     padding: 24,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -186,7 +206,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   input: {
-    borderRadius: 10,
+    borderRadius: layout.inputRadius,
     color: COLORS.text,
     paddingVertical: 10,
     paddingHorizontal: 12,
@@ -227,7 +247,7 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     backgroundColor: COLORS.primary,
-    borderRadius: 12,
+    borderRadius: layout.buttonRadius,
     overflow: 'hidden',
   },
   primaryButtonText: {
