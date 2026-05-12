@@ -6,4 +6,5 @@ export default {
     // Main
     HOME: 'Home',
     PROFILE: 'Profile',
+    PAYMENTS_DUMMY: 'DummyPayment',
 };
