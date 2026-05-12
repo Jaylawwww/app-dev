@@ -1,0 +1,248 @@
+ErrorScreen
+
+import React from 'react';
+import { Text, TouchableOpacity, View } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { useDispatch, useSelector } from 'react-redux';
+import { ROUTES } from '../../utils';
+import { authLogout } from '../../app/actions';
+
+const ErrorScreen = () => {
+  const navigation = useNavigation();
+  const route = useRoute();
+  const dispatch = useDispatch();
+
+  const auth = useSelector(state => state.auth);
+
+  const title = route?.params?.title || (auth?.isError ? 'Login failed' : 'Error');
+  const message =
+    route?.params?.message ||
+    auth?.error ||
+    'Something went wrong. Please try again.';
+
+  const handleTryAgain = () => {
+    // Clear any persisted auth error so returning to Login doesn't immediately
+    // redirect back here.
+    dispatch(authLogout());
+    navigation.reset({
+      index: 0,
+      routes: [{ name: ROUTES.LOGIN }],
+    });
+  };
+
+  return (
+    <View style={{ flex: 1, backgroundColor: '#f5f5f5', padding: 24, justifyContent: 'center' }}>
+      <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 18 }}>
+        <Text style={{ fontSize: 20, fontWeight: '700', color: '#111827', marginBottom: 10 }}>
+          {title}
+        </Text>
+        <Text style={{ fontSize: 15, lineHeight: 22, color: '#374151' }}>{message}</Text>
+
+        <TouchableOpacity
+          onPress={handleTryAgain}
+          style={{
+            marginTop: 18,
+            backgroundColor: '#1e3a8a',
+            paddingVertical: 12,
+            borderRadius: 10,
+            alignItems: 'center',
+          }}
+        >
+          <Text style={{ color: '#fff', fontWeight: '600' }}>Try again</Text>
+        </TouchableOpacity>
+        
+      </View>
+    </View>
+  );
+};
+
+export default ErrorScreen;
+
+uncomment
+authnav.js
+routes.js
+
+
+
+
+
+
+
+
+Login
+
+import { useState, useEffect } from 'react';
+import {
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { useDispatch, useSelector } from 'react-redux';
+
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import CustomButton from '../../components/CustomButton';
+import CustomTextInput from '../../components/CustomTextInput';
+import { IMG, ROUTES } from '../../utils';
+import { authLogin } from '../../app/actions';
+
+const iconColor = '#6c757d';
+// Adjust this to change the space above the logo (default 48; use 24 for less, 80 for more)
+const LOGIN_TOP_PADDING = 80;
+
+const Login = () => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+
+  const navigation = useNavigation();
+  const dispatch = useDispatch();
+  const auth = useSelector(state => state.auth);
+
+  useEffect(() => {
+    if (!auth.isLoading && auth.isError && auth.error) {
+      navigation.navigate(ROUTES.ERRORSCREEN, {
+        title: 'Login failed',
+        message: auth.error,
+      });
+    }
+  }, [auth.isLoading, auth.isError, auth.error, navigation]);
+
+  const handleContinue = () => {
+    if (username === '' || password === '') {
+      // Previous behavior used Alert or an allError helper (not defined in this file).
+      // Route validation errors to the dedicated error screen.
+      navigation.navigate(ROUTES.ERRORSCREEN, {
+        title: 'Invalid Credentials',
+        message: 'Please enter username or email and password',
+      });
+      return;
+    }
+    dispatch(authLogin({ username, password }));
+  };
+
+  return (
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: '#f5f5f5' }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingHorizontal: 24,
+          paddingTop: LOGIN_TOP_PADDING,
+          paddingBottom: 32,
+        }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Logo */}
+        <View style={{ alignItems: 'center', marginBottom: 40 }}>
+          <Image
+            source={IMG.LOGO}
+            style={{ width: 200, height: 64 }}
+            resizeMode="contain"
+          />
+        </View>
+
+        {/* Form */}
+        <View style={{ width: '100%', marginBottom: 24 }}>
+          <CustomTextInput
+            label="Username or email"
+            placeholder="Username or Email"
+            value={username}
+            onChangeText={setUsername}
+            leftIcon={<MaterialIcons name="person" size={22} color={iconColor} />}
+            containerStyle={{ marginBottom: 20 }}
+          />
+          <CustomTextInput
+            label="Password"
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            leftIcon={<MaterialIcons name="lock" size={22} color={iconColor} />}
+            containerStyle={{ marginBottom: 8 }}
+          />
+        </View>
+
+        {/* Continue button */}
+        <CustomButton
+          label={auth.isLoading ? 'Signing in...' : 'Continue'}
+          containerStyle={{
+            backgroundColor: auth.isLoading ? '#6b7ba8' : '#1e3a8a',
+            borderRadius: 8,
+            marginBottom: 32,
+            width: '100%',
+            overflow: 'hidden',
+          }}
+          textStyle={{
+            color: '#fff',
+            fontWeight: '600',
+            fontSize: 16,
+          }}
+          onPress={handleContinue}
+          disabled={auth.isLoading}
+        />
+
+        {/* Sign up prompt */}
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexWrap: 'wrap',
+            marginBottom: 24,
+          }}
+        >
+          <Text style={{ color: '#5e6d55', fontSize: 15 }}>
+            Don't have an account?{' '}
+          </Text>
+          <TouchableOpacity onPress={() => navigation.navigate(ROUTES.REGISTER)}>
+            <Text
+              style={{
+                color: '#1e3a8a',
+                fontWeight: '600',
+                textDecorationLine: 'underline',
+                fontSize: 15,
+              }}
+            >
+              Sign Up
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Cookie policy */}
+        <Text
+          style={{
+            color: '#9ca299',
+            fontSize: 12,
+            lineHeight: 18,
+            textAlign: 'center',
+            marginBottom: 8,
+          }}
+        >
+          This app may use cookies for analytics, personalized content and ads.
+          By continuing, you agree to this use of cookies.
+        </Text>
+        <TouchableOpacity style={{ alignSelf: 'center' }}>
+          <Text
+            style={{
+              color: '#1e3a8a',
+              fontSize: 12,
+              textDecorationLine: 'underline',
+              fontWeight: '500',
+            }}
+          >
+            Learn more
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+};
+
+export default Login;
