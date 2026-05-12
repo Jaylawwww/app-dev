@@ -1,6 +1,12 @@
-import { USER_LOGIN_REQUEST, USER_LOGIN_COMPLETE, USER_LOGIN_ERROR, RESET_USER_LOGIN } from "../actions";
+import {
+  USER_LOGIN_REQUEST,
+  USER_LOGIN_COMPLETE,
+  USER_LOGIN_ERROR,
+  RESET_USER_LOGIN,
+} from '../actions';
 
 const INITIALSTATE = {
+  /** Normalized session from API (token, user, raw) — persisted via redux-persist only */
   data: null,
   isLoading: false,
   isError: false,
@@ -8,7 +14,6 @@ const INITIALSTATE = {
 };
 
 export default function reducer(state = INITIALSTATE, action) {
-  console.log(action.type);
   switch (action.type) {
     case USER_LOGIN_REQUEST:
       return {
